@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.capstone_ryecyclerview_ex">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_ddu"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Capstone_RyecyclerView_ex">
+        <activity
+            android:name=".jeju_main_page"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".jeju_dayplan"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".jeju_setplan.jeju_setplan"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".jeju_calender_b"
+            android:exported="false"
+            android:theme="@style/MaterialCustomRoot"
+            >
+        </activity>
+        <activity
+            android:name=".jeju_setplan2.MainActivity"
+            android:exported="false"
+
+            >
+        </activity>
+        <activity
+            android:name=".jeju_survey_page"
+            android:exported="false"
+
+            >
+        </activity>
+        <activity
+            android:name=".SurveyActivity"
+            android:exported="false"
+
+            >
+        </activity>
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false"
+           />
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false"
+            />
+        <activity
+            android:name=".search_view.tour_MainActivity"
+            android:exported="false"
+            android:label="관광지를 검색하세요."
+            android:theme="@style/Theme.search_menu"/>
+        <activity
+            android:name=".search_view.lodging_MainActivity"
+            android:exported="false"
+            android:label="숙소를 검색하세요."
+            android:theme="@style/Theme.search_menu"/>
+        <activity
+            android:name=".search_view.restaurant_MainActivity"
+            android:exported="false"
+            android:label="맛집을 검색하세요."
+            android:theme="@style/Theme.search_menu"/>
+
+
+
+        <activity
+            android:name=".u_map1"
+            android:exported="false"
+            />
+        <activity
+            android:name=".u_map2"
+            android:exported="false"
+            />
+        <activity
+            android:name=".u_end_page"
+            android:exported="false"
+            />
+
+
+
+
+    </application>
+
+</manifest>
