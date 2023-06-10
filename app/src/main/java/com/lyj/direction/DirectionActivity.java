@@ -10,6 +10,7 @@ import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.gson.reflect.TypeToken;
 import com.lyj.direction.R;
 
 import com.google.android.libraries.places.api.net.PlacesClient;
@@ -30,6 +31,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
@@ -73,6 +75,7 @@ import com.lyj.direction.Model.DirectionStepModel;
 import com.lyj.direction.Model.GoogleResponseModel;
 import com.lyj.direction.databinding.ActivityDirectionBinding;
 import com.lyj.direction.databinding.BottomSheetLayoutBinding;
+import com.lyj.direction.jeju_setplan2.ItemModel;
 
 import java.io.IOException;
 import java.net.URI;
@@ -94,6 +97,7 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
     public void onDurationReceived(double duration) {
        // calculate(duration);
     }
+
 
     double mindur=1000000000;
     private Polyline[] p=new Polyline[5];
@@ -141,19 +145,47 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
     private DirectionStepAdapter adapter;
     private static final int AUTOCOMPLETE_REQUEST_CODE = 1;
     private PlacesClient placesClient;
-
+    ArrayList<ItemModel> dataList; //영진코드
+    private SharedPreferences sharedPreferences;
     Polyline polyline;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        //저장된 데이터 읽기 영진쓰!!!!!!!!!!!
+        sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
+        String json = sharedPreferences.getString("dataList", "defaultValue");
+        Log.d("지도에서 확인",json);
+        if (!json.isEmpty()) {
+            Gson gson = new Gson();
+            dataList= gson.fromJson(json, new TypeToken<ArrayList<ItemModel>>(){}.getType());
+            // 데이터 사용
+        }
+
+        for (ItemModel item : dataList) {
+            Log.d("지도MainActivity", "Item: " + item.getName() + ", Quantity: " + item.getType());
+            int a = item.getType();
+            String b=item.getX();
+            String c=item.getY();
+            totalLtLg.add(new LatLng(Double.parseDouble(b),Double.parseDouble(c)));
+
+            //getType()이 int형인 걸 보니 자료형도 유지가 되는 거 같은
+        }
+
+
+
+
+
         binding = ActivityDirectionBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         mapFragment=(SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.directionMap);
 
+       // totalLtLg.add(a);
+      //  totalLtLg.add(b);
+     //   totalLtLg.add(c);
+     // totalLtLg.add(d);
 
-      //  totalLtLg.add(a);
-        totalLtLg.add(b);   //경유지
-        //totalLtLg.add(c);
         //------------자동완성 검색
          Places.initialize(getApplicationContext(), "AIzaSyByRMe8nJ5cp0bKSKcpQLM5URiu07U1DvQ");
         placesClient=Places.createClient(this);
@@ -317,21 +349,20 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
                                 getSupportActionBar().setTitle(routeModel.getSummary());
 
                                 DirectionLegModel legModel = routeModel.getLegs().get(0);
-                               // binding.txtStartLocation.setText(legModel.getStartAddress());
-                               // binding.txtEndLocation.setText(legModel.getEndAddress());
+                                // binding.txtStartLocation.setText(legModel.getStartAddress());
+                                // binding.txtEndLocation.setText(legModel.getEndAddress());
 
 
+                                // bottomSheetLayoutBinding.txtSheetTime.setText(legModel.getDuration().getText());
+                                //  bottomSheetLayoutBinding.txtSheetDistance.setText(legModel.getDistance().getText());
 
-                               // bottomSheetLayoutBinding.txtSheetTime.setText(legModel.getDuration().getText());
-                              //  bottomSheetLayoutBinding.txtSheetDistance.setText(legModel.getDistance().getText());
-
-                                durationSum+=legModel.getDuration().getValue();
-                               distanceSum+=legModel.getDistance().getValue();
-                               double min=durationSum/60%60;
-                                durationSum/=3600;
-                                distanceSum/=100;
-                                bottomSheetLayoutBinding.txtSheetTime.setText(String.valueOf((int)durationSum)+"시간"+String.valueOf((int)min)+"분");
-                                bottomSheetLayoutBinding.txtSheetDistance.setText(String.valueOf((int)distanceSum)+"km");
+                                durationSum += legModel.getDuration().getValue();
+                                distanceSum += legModel.getDistance().getValue();
+                                double min = durationSum / 60 % 60;
+                                durationSum /= 3600;
+                                distanceSum /= 100;
+                                bottomSheetLayoutBinding.txtSheetTime.setText(String.valueOf((int) durationSum) + "시간" + String.valueOf((int) min) + "분");
+                                bottomSheetLayoutBinding.txtSheetDistance.setText(String.valueOf((int) distanceSum) + "km");
                                /* mGoogleMap.addMarker(new MarkerOptions()
                                         .position(new LatLng(legModel.getEndLocation().getLat(), legModel.getEndLocation().getLng()))
                                         .title("End Location"));
@@ -339,28 +370,23 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
                                 mGoogleMap.addMarker(new MarkerOptions()
                                         .position(new LatLng(legModel.getStartLocation().getLat(), legModel.getStartLocation().getLng()))
                                         .title("Start Location"));*/
-                                mGoogleMap.addMarker(new MarkerOptions()
-                                        .position(a)
-                                        .title("1"));
-                                mGoogleMap.addMarker(new MarkerOptions()
-                                        .position(b)
-                                        .title("2"));
-                                mGoogleMap.addMarker(new MarkerOptions()
-                                        .position(c)
-                                        .title("3"));
-                                mGoogleMap.addMarker(new MarkerOptions()
-                                        .position(d)
-                                        .title("4"));
+                                for (int i = 0; i < totalLtLg.size(); i++) {
+                                    mGoogleMap.addMarker(new MarkerOptions()
+                                            .position(totalLtLg.get(i))
+                                            .title(i + "번째"));
+                                }
+
                                 adapter.setDirectionStepModels(legModel.getSteps());
 
 
-                                List<LatLng> stepList= new ArrayList<>(); ;
+                                List<LatLng> stepList = new ArrayList<>();
+                                ;
 
                                 PolylineOptions options = new PolylineOptions()
                                         .width(15)
-                                       // .addAll(totalLatLn)
+                                        // .addAll(totalLatLn)
                                         .color(clr)//R.color.line
-                                       .geodesic(true)
+                                        .geodesic(true)
                                         .clickable(true)
                                         .visible(true);
 
@@ -377,16 +403,20 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
 
                                 options.pattern(pattern);
 
-                                if(legModel.getSteps()!=null) {
+                                if (legModel.getSteps() != null) {
                                     for (DirectionStepModel stepModel : legModel.getSteps()) {
 
                                         List<com.google.maps.model.LatLng> decodedLatLng = decode(stepModel.getPolyline().getPoints());
+
                                         for (com.google.maps.model.LatLng latLng : decodedLatLng) {
                                             stepList.add(new LatLng(latLng.lat, latLng.lng));
-                                            totalstepList.add(new LatLng(latLng.lat, latLng.lng));
+
+                                                totalstepList.add(new LatLng(latLng.lat, latLng.lng));
+
                                         }
                                     }
                                 }
+
 
                               //  options.addAll(stepList);
                                 options.addAll(totalstepList);
@@ -404,7 +434,7 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
                                 LatLng endLocation = new LatLng(legModel.getStartLocation().getLat(), legModel.getStartLocation().getLng());
 
 
-                                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(new LatLngBounds(d,c), 2));//startLocation, endLocation, 17
+                                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(new LatLngBounds(b,c), 2));//startLocation, endLocation, 17
 
 
                             } else {
@@ -586,28 +616,30 @@ void TEST() {
     temp=0;
 
 
-    getTime(a.latitude,a.longitude,d.latitude,d.longitude);
-   getTime(d.latitude,d.longitude,c.latitude,c.longitude);
-    getTime(c.latitude,c.longitude,b.latitude,b.longitude);//최장
+ //   getTime(a.latitude,a.longitude,d.latitude,d.longitude);
+ //  getTime(d.latitude,d.longitude,c.latitude,c.longitude);
+ //   getTime(c.latitude,c.longitude,b.latitude,b.longitude);//최장
 
     Log.i("으아","temp="+temp);
 
-        if (temp < mindur && temp != 0) {
-            mindur = temp;
-            Log.i("최장", "시간" + mindur);
-            optimal.clear();
-            optimal.add(a);
-            optimal.add(d);
-            optimal.add(c);
-            optimal.add(b);
-        }
-
-   // temp=0;
+    List<List<LatLng>> permutations = new ArrayList<>();
+    boolean[] visited = new boolean[totalLtLg.size()];
+    List<LatLng> currentPermutation = new ArrayList<>();
+    LatLng[] A=totalLtLg.toArray(new LatLng[0]);
+    permute(A, visited, currentPermutation, permutations);  //permutations 안에 있나..
+    //Log.i("per","per"+permutations);
+    for(int i=0;i<permutations.size()-1;i++){
+        for(int j=0;j<permutations.get(0).size()-1;j++){
+          Log.i("I,J","="+i+"+"+j);
+        getTime(permutations.get(i).get(j).latitude,permutations.get(i).get(j).longitude,permutations.get(i).get(j+1).latitude,permutations.get(i).get(j+1).longitude);
+    }
+    }
+   // temp =0;
   //  plz.clear();
 
-    getTime(a.latitude,a.longitude,c.latitude,c.longitude);
-    getTime(c.latitude,c.longitude,d.latitude,d.longitude);
-    getTime(d.latitude,d.longitude,b.latitude,b.longitude); //최단
+   // getTime(a.latitude,a.longitude,c.latitude,c.longitude);
+   // getTime(c.latitude,c.longitude,d.latitude,d.longitude);
+  //  getTime(d.latitude,d.longitude,b.latitude,b.longitude); //최단
 
 
     /*new DurationCallback() {
@@ -616,15 +648,7 @@ void TEST() {
             plz.add(duration);
         }
     });*/
-        if (temp < mindur &&temp!=0) {
-            mindur = temp;
-            Log.i("최단", "시간" + mindur);
-            optimal.clear();
-            optimal.add(a);
-            optimal.add(c);
-            optimal.add(d);
-            optimal.add(b);
-        }
+
 
    /* for(int i=0;i<optimal.size()-1;i++){
         LatLng[] n=optimal.toArray(new LatLng[optimal.size()+1]);
@@ -663,35 +687,37 @@ void TEST() {
                             DirectionLegModel legModel = routeModel.getLegs().get(0);
                             double duration = legModel.getDuration().getValue();
                            // callback.onDurationReceived(duration);
-                            plz.add(duration);
 
-                            LatLng newnew=new LatLng(aLat,aLng);
+
+                            plz.add(duration);//시간
+                            Log.i("시도","dur"+duration);
+                            LatLng newnew=new LatLng(aLat,aLng);//출발지
 
                                 plz2.add(newnew);
 
-                            LatLng newnew2=new LatLng(bLat,bLng);
+                            LatLng newnew2=new LatLng(bLat,bLng);//도착지
 
                                 plz2.add(newnew2);
 
 
 
-                            for(int i=0;i<plz.size()-2;i+=3){
+                            for(int i=0;i<plz.size()-2;i+=totalLtLg.size()-1){
                                 double temp=plz.get(i)+plz.get(i+1)+plz.get(i+2);
                                 if(temp<mindur){
                                     mindur=temp;
                                     optimal.clear();
-                                    for(int j=i*2;j<i*2+3*2;j++) {
+                                    for(int j=i*2;j<(i+totalLtLg.size()-1)*2;j++) {
                                         if (!optimal.contains(plz2.get(j))) {
                                             optimal.add(plz2.get(j));
                                         }
                                     }
-                                    //optimal.add(a);
-                                    //optimal.add(c);
-                                   // optimal.add(d);
-                                   // optimal.add(b);
                                 }
                             }
+
                             for(int i=0;i<optimal.size()-1;i++){
+                               if(polyline!=null){
+                                   polyline.remove();
+                                }
                                 LatLng[] n=optimal.toArray(new LatLng[optimal.size()+1]);
                                 getDirection("transit",n[i].latitude,n[i].longitude,n[i+1].latitude,n[i+1].longitude,Color.RED );
 
@@ -718,6 +744,22 @@ void TEST() {
     }
 
 }
+    private static void permute(LatLng[] totalLtLng, boolean[] visited, List<LatLng> currentPermutation, List<List<LatLng>> permutations) {
+        if (currentPermutation.size() == totalLtLng.length) {
+            permutations.add(new ArrayList<>(currentPermutation));
+            return;
+        }
+
+        for (int i = 0; i < totalLtLng.length; i++) {
+            if (!visited[i]) {
+                visited[i] = true;
+                currentPermutation.add(totalLtLng[i]);
+                permute(totalLtLng, visited, currentPermutation, permutations);
+                currentPermutation.remove(currentPermutation.size() - 1);
+                visited[i] = false;
+            }
+        }
+    }
 
 
 }
