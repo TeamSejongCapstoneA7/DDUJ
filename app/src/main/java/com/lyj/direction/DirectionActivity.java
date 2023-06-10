@@ -85,20 +85,21 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+import java.util.HashMap;
 public class DirectionActivity extends AppCompatActivity implements OnMapReadyCallback,DurationCallback {
     @Override
     public void onDurationReceived(double duration) {
        // calculate(duration);
     }
 
-
+    HashMap<String, LatLng> dictionary = new HashMap<>();
     double mindur=1000000000;
     private Polyline[] p=new Polyline[5];
     List<Double>plz=new ArrayList<>();
@@ -108,8 +109,9 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
     private LatLng c=new LatLng(33.5054,	126.5384);//한라서적타운
     private LatLng d=new LatLng(33.2534,	126.4288);//함쉐프키친
     List<com.google.android.gms.maps.model.LatLng> totalLtLg=new ArrayList<>();
+    List<String> totalName=new ArrayList<>();
 
-
+int count=0;
    int index=0;
    private List<LatLng>optimal= new ArrayList<>();
 
@@ -168,8 +170,11 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
             int a = item.getType();
             String b=item.getX();
             String c=item.getY();
-            totalLtLg.add(new LatLng(Double.parseDouble(b),Double.parseDouble(c)));
-
+            String d=item.getName();
+            LatLng lg=new LatLng(Double.parseDouble(b),Double.parseDouble(c));
+            totalLtLg.add(lg);
+            totalName.add(d);
+            dictionary.put(d,lg);
             //getType()이 int형인 걸 보니 자료형도 유지가 되는 거 같은
         }
 
@@ -190,50 +195,7 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
          Places.initialize(getApplicationContext(), "AIzaSyByRMe8nJ5cp0bKSKcpQLM5URiu07U1DvQ");
         placesClient=Places.createClient(this);
         // AutocompleteSupportFragment 생성
-        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
-                getSupportFragmentManager().findFragmentById(R.id.txtStartLocation);
-        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.LAT_LNG, Place.Field.ID, Place.Field.NAME));
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(@NonNull Place place) {
-                // TODO: Get info about the selected place.
-                Log.i("TAG", "Place: " + place.getName() + ", " + place.getLatLng());
-                startLat=place.getLatLng().latitude;
-                startLng=place.getLatLng().longitude;
-                startltlg=new LatLng(startLat,startLng);
-                mGoogleMap.addMarker(new MarkerOptions().position( startltlg).title(place.getName()));
-                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom( startltlg,12));
-            }
 
-            @Override
-            public void onError(@NonNull Status status) {
-                // TODO: Handle the error.
-                Log.i("TAG", "An error occurred: " + status);
-            }
-        });
-
-
-        AutocompleteSupportFragment autocompleteFragment2 = (AutocompleteSupportFragment)
-                getSupportFragmentManager().findFragmentById(R.id.txtEndLocation);
-        autocompleteFragment2.setPlaceFields(Arrays.asList(Place.Field.LAT_LNG, Place.Field.ID, Place.Field.NAME));
-        autocompleteFragment2.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(@NonNull Place place) {
-                // TODO: Get info about the selected place.
-                Log.i("TAG", "Place: " + place.getName() + ", " + place.getLatLng());
-                endLat=place.getLatLng().latitude;
-                endLng=place.getLatLng().longitude;
-                endltlg=new LatLng(endLat,endLng);
-                mGoogleMap.addMarker(new MarkerOptions().position( endltlg).title(place.getName()));
-                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom( endltlg,12));
-            }
-
-            @Override
-            public void onError(@NonNull Status status) {
-                // TODO: Handle the error.
-                Log.i("TAG", "An error occurred: " + status);
-            }
-        });
 
     //--------------길찾기 버튼
     /*    btn=findViewById(R.id.roadBtn);
@@ -273,19 +235,7 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
         mapFragment.getMapAsync(this);
 
 
-        binding.enableTraffic.setOnClickListener(view -> {
-            if (isTrafficEnable) {
-                if (mGoogleMap != null) {
-                    mGoogleMap.setTrafficEnabled(false);
-                    isTrafficEnable = false;
-                }
-            } else {
-                if (mGoogleMap != null) {
-                    mGoogleMap.setTrafficEnabled(true);
-                    isTrafficEnable = true;
-                }
-            }
-        });
+
 
       /*  binding.travelMode.setOnCheckedStateChangeListener(new ChipGroup.OnCheckedStateChangeListener() {
 
@@ -316,6 +266,9 @@ public class DirectionActivity extends AppCompatActivity implements OnMapReadyCa
 
         });*/
         TEST();
+        for(int i=0;i<totalLtLg.size()-1;i++){
+            getDirection("transit",totalLtLg.get(i).latitude,totalLtLg.get(i).longitude,totalLtLg.get(i+1).latitude,totalLtLg.get(i+1).longitude,Color.RED );
+        }
     }
     private void getDirection(String mMode,Double startLat,Double startLng,Double endLat,Double endLng,int clr) {
         boolean alt=false;
@@ -713,16 +666,23 @@ void TEST() {
                                     }
                                 }
                             }
+                            LatLng[] n = optimal.toArray(new LatLng[optimal.size() + 1]);
+                            String s="";
 
-                            for(int i=0;i<optimal.size()-1;i++){
-                               if(polyline!=null){
-                                   polyline.remove();
+                                for (Map.Entry<String, LatLng> entry : dictionary.entrySet()) {
+                                    LatLng coor=entry.getValue();
+                                   // Log.i("Coor",coor+"1");
+                                    if(optimal.contains(coor)) {
+                                      //  Log.i("Coor2", entry.getKey() + "2");
+                                        s += entry.getKey().toString()+",";
+
+                                    }
                                 }
-                                LatLng[] n=optimal.toArray(new LatLng[optimal.size()+1]);
-                                getDirection("transit",n[i].latitude,n[i].longitude,n[i+1].latitude,n[i+1].longitude,Color.RED );
+                                if(totalLtLg.size()==optimal.size()) {
+                                    Toast.makeText(DirectionActivity.this, "최적의경로는" + s + "입니다.", Toast.LENGTH_SHORT).show();
+                                    Log.i("최적", "=" + s);
 
-                            }
-
+                           }
 
                         } else {
                             Toast.makeText(DirectionActivity.this, "경로가 없습니다1", Toast.LENGTH_SHORT).show();
